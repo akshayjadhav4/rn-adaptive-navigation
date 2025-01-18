@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "adaptive-navigation": ["../src/index"],
+      "adaptive-navigation/*": ["../src/*"]
+    }
+  }
+}

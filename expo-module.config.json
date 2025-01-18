@@ -1,0 +1,17 @@
+{
+  "platforms": [
+    "apple",
+    "android",
+    "web"
+  ],
+  "apple": {
+    "modules": [
+      "AdaptiveNavigationModule"
+    ]
+  },
+  "android": {
+    "modules": [
+      "expo.modules.adaptivenavigation.AdaptiveNavigationModule"
+    ]
+  }
+}
