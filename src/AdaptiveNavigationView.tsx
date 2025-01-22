@@ -1,15 +1,20 @@
+import { CommonActions } from "@react-navigation/native";
 import { requireNativeView } from "expo";
 import * as React from "react";
-import { StyleSheet, View, ViewProps } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { AdaptiveNavigationViewProps } from "./AdaptiveNavigation.types";
+import {
+  AdaptiveNavigationViewProps,
+  NativeAdaptiveNavigationViewProps,
+} from "./AdaptiveNavigation.types";
 
-const NativeView: React.ComponentType<ViewProps> =
+const NativeView: React.ComponentType<NativeAdaptiveNavigationViewProps> =
   requireNativeView("AdaptiveNavigation");
 
 export default function AdaptiveNavigationView({
   state,
   descriptors,
+  navigation,
   ...props
 }: Readonly<AdaptiveNavigationViewProps>) {
   const routes = React.useMemo(() => {
@@ -17,11 +22,55 @@ export default function AdaptiveNavigationView({
   }, [state.routes]);
   const focusedScreenKey = routes[state.index].key;
 
+  const tabs = React.useMemo(
+    () =>
+      routes.map((route) => {
+        const options = descriptors[route.key]?.options;
+        return {
+          label:
+            options?.tabBarLabel !== undefined
+              ? options.tabBarLabel
+              : options?.title !== undefined
+                ? options.title
+                : route.name,
+          icon: descriptors[route.key].options.tabBarIcon ?? null,
+          isSelected: route.key === focusedScreenKey,
+          key: route.key,
+        };
+      }),
+    [routes, descriptors]
+  );
+
   return (
     <NativeView
       style={{
         width: "100%",
         height: "100%",
+      }}
+      tabs={tabs}
+      onPressEvent={(event) => {
+        const index = event.nativeEvent.tabIndex;
+        const route = state.routes[index];
+
+        if (!route) {
+          return;
+        }
+        const isFocused = route.key === focusedScreenKey;
+        const navigationEvent = navigation.emit({
+          type: "tabPress",
+          target: route.key,
+          canPreventDefault: true,
+          data: {
+            isAlreadyFocused: isFocused,
+          },
+        });
+
+        if (!isFocused && !navigationEvent.defaultPrevented) {
+          navigation.dispatch({
+            ...CommonActions.navigate(route),
+            target: state.key,
+          });
+        }
       }}
     >
       {routes.map((route) => {

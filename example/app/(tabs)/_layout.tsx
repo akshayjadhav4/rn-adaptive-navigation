@@ -11,12 +11,14 @@ function TabLayout() {
         name="index"
         options={{
           title: "Home",
+          tabBarIcon: "Home",
         }}
       />
       <Tabs.Screen
         name="details"
         options={{
           title: "Details",
+          tabBarIcon: "Info",
         }}
       />
     </Tabs>

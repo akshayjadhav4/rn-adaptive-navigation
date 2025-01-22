@@ -1,68 +1,103 @@
 package expo.modules.adaptivenavigation
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.NoteAlt
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.views.ExpoView
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import expo.modules.kotlin.records.Field
+import expo.modules.kotlin.records.Record
+import expo.modules.kotlin.viewevent.EventDispatcher
 
+class Tabs : Record {
+    @Field
+    val key: String = ""
+
+    @Field
+    val label: String = ""
+
+    @Field
+    val icon: String? = null
+
+    @Field
+    val isSelected: Boolean = false
+}
+
+@SuppressLint("ViewConstructor")
 class AdaptiveNavigationView(context: Context, appContext: AppContext) :
     ExpoView(context, appContext) {
 
-    private val bottomNavigation = BottomNavigationView(context)
-    private val frameLayout = FrameLayout(context)
-    internal val navigation = bottomNavigation.apply {
+    var tabs: MutableList<Tabs> = mutableListOf()
 
+    private val onPressEvent by EventDispatcher()
+
+    private val frameLayout = FrameLayout(context).apply {
+        isSaveEnabled = false // Prevent state preservation during configuration changes.
+    }
+    private val composeView = ComposeView(context).also {
+        it.setContent {
+            NavigationSuiteScaffold(
+                navigationSuiteItems = {
+                    tabs.forEachIndexed { index, tab ->
+                        item(
+                            selected = tab.isSelected,
+                            onClick = { onPressEvent(mapOf("tabIndex" to index)) },
+                            icon = {
+                                val icon: ImageVector? = getImageVectorByName(tab.icon)
+                                icon?.let { iv ->
+                                    Icon(imageVector = iv, contentDescription = null)
+                                }
+                            },
+                            label = { Text(tab.label) },
+                        )
+                    }
+                }
+            ) {
+                FrameLayoutContainer()
+            }
+        }
     }
 
     init {
-        orientation = VERTICAL
-
-        addView(
-            frameLayout, LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                0,
-            ).apply {
-                weight = 1f
-            } // expand to fill any remaining vertical space after bottomNavigation have been laid out
-        )
-        // it won’t preserve its state during configuration changes
-        frameLayout.isSaveEnabled = false
-
-//        layoutHolder.setBackgroundColor(Color.parseColor("#F3B63A"))
-//        navigation.setBackgroundColor(Color.parseColor("#FF0000"))
-
-        addView(navigation, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
-
+        addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
     }
 
     override fun addView(child: View, index: Int) {
         when (child) {
-            navigation, frameLayout -> {
-
-                super.addView(child, index)
-            }
-
+            composeView, frameLayout -> super.addView(child, index)
             else -> {
-                // Create a new container for this child
                 val sceneContainer = createSceneContainer()
 
-                // TEMP: to test Component is rendering or not
-                sceneContainer.visibility = if (index == 0) View.VISIBLE else View.INVISIBLE
-                sceneContainer.isEnabled = if (index == 0) true else false
+                // TEST_PURPOSE:: Configure scene visibility based on the index
+                 sceneContainer.visibility = if (index == 0) VISIBLE else INVISIBLE
+                 sceneContainer.isEnabled = index == 0
 
-                // Add container to layoutHolder
+                // Add the scene container to the frameLayout
                 frameLayout.addView(sceneContainer)
-
-                // Add the child to its container
+                // Add the child view to the scene container
                 sceneContainer.addView(child)
             }
         }
     }
 
     private fun createSceneContainer(): FrameLayout {
-        val sceneContainer = FrameLayout(context).apply {
+        Log.d("AdaptiveNavigationView", "createSceneContainer Called")
+        return FrameLayout(context).apply {
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -70,7 +105,33 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
             visibility = INVISIBLE
             isEnabled = false
         }
-        return sceneContainer
     }
 
+    @Composable
+    private fun FrameLayoutContainer() {
+        // Embed the  FrameLayout inside the Compose Scaffold
+        Box(modifier = Modifier.fillMaxSize()) {
+            AndroidView(
+                factory = { frameLayout }, // Use the existing FrameLayout instance
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+
+    fun setTabs(tabs: ArrayList<Tabs>) {
+        Log.d("AdaptiveNavigationView", tabs[0].isSelected.toString())
+        this.tabs = tabs
+    }
+
+
+    /**
+     * TEMP Solution to get Material Icons
+     */
+    private fun getImageVectorByName(iconName: String?): ImageVector? {
+        return when (iconName) {
+            "Home" -> Icons.Default.Home
+            "Info" -> Icons.Default.NoteAlt
+            else -> null
+        }
+    }
 }

@@ -12,6 +12,11 @@ class AdaptiveNavigationModule : Module() {
 
     View(AdaptiveNavigationView::class) {
 
+      Events("onPressEvent")
+
+      Prop("tabs") { view: AdaptiveNavigationView, prop: ArrayList<Tabs> ->
+        view.setTabs(prop)
+      }
     }
   }
 }

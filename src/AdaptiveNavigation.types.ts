@@ -9,7 +9,7 @@ import {
   TabNavigationState,
   TabRouterOptions,
 } from "@react-navigation/native";
-import { StyleProp, ViewStyle } from "react-native";
+import { StyleProp, ViewProps, ViewStyle } from "react-native";
 
 export type AdaptiveNavigationHelpers = NavigationHelpers<
   ParamListBase,
@@ -39,6 +39,8 @@ export type AdaptiveNavigationViewProps = AdaptiveNavigationConfig & {
  */
 export type AdaptiveNavigationOptions = {
   title?: string;
+  tabBarLabel?: string;
+  tabBarIcon?: string;
 };
 
 /**
@@ -82,3 +84,16 @@ export type AdaptiveNavigatorProps = DefaultNavigatorOptions<
 > &
   TabRouterOptions &
   AdaptiveNavigationConfig;
+
+export type OnPressEvent = {
+  tabIndex: string;
+};
+export type NativeAdaptiveNavigationViewProps = ViewProps & {
+  tabs: {
+    label: string;
+    icon: string | null;
+    isSelected: boolean;
+    key: string;
+  }[];
+  onPressEvent: (event: { nativeEvent: OnPressEvent }) => void;
+};
