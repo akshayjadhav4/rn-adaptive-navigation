@@ -1,15 +1,15 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-const Details = () => {
+const Sent = () => {
   return (
     <View style={styles.container}>
-      <Text>Details</Text>
+      <Text>Sent</Text>
     </View>
   );
 };
 
-export default Details;
+export default Sent;
 
 const styles = StyleSheet.create({
   container: {
