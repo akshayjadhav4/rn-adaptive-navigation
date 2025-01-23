@@ -97,3 +97,8 @@ export type NativeAdaptiveNavigationViewProps = ViewProps & {
   }[];
   onPressEvent: (event: { nativeEvent: OnPressEvent }) => void;
 };
+
+export type NavigationType =
+  | "bottom_navigation"
+  | "navigation_rail"
+  | "permanent_navigation_drawer";
