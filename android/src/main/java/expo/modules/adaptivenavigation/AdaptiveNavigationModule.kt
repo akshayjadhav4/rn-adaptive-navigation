@@ -10,6 +10,10 @@ class AdaptiveNavigationModule : Module() {
 
     Name("AdaptiveNavigation")
 
+    Function("getNavigationType") {
+      return@Function getNavigationType()
+    }
+
     View(AdaptiveNavigationView::class) {
 
       Events("onPressEvent")
