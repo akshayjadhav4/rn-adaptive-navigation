@@ -88,6 +88,10 @@ export type AdaptiveNavigatorProps = DefaultNavigatorOptions<
 export type OnPressEvent = {
   tabIndex: string;
 };
+export type onResizeEvent = {
+  width: number;
+  height: number;
+};
 export type NativeAdaptiveNavigationViewProps = ViewProps & {
   tabs: {
     label: string;
@@ -96,6 +100,7 @@ export type NativeAdaptiveNavigationViewProps = ViewProps & {
     key: string;
   }[];
   onPressEvent: (event: { nativeEvent: OnPressEvent }) => void;
+  onResize: (event: { nativeEvent: onResizeEvent }) => void;
 };
 
 export type NavigationType =

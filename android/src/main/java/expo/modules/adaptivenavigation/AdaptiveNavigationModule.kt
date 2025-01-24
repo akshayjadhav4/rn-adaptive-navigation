@@ -6,21 +6,22 @@ import expo.modules.kotlin.modules.ModuleDefinition
 
 class AdaptiveNavigationModule : Module() {
 
-  override fun definition() = ModuleDefinition {
+    override fun definition() = ModuleDefinition {
 
-    Name("AdaptiveNavigation")
+        Name("AdaptiveNavigation")
 
-    Function("getNavigationType") {
-      return@Function getNavigationType()
+        Function("getNavigationType") {
+            return@Function getNavigationType()
+        }
+
+        View(AdaptiveNavigationView::class) {
+
+            Events("onPressEvent", "onResize")
+
+
+            Prop("tabs") { view: AdaptiveNavigationView, prop: ArrayList<Tabs> ->
+                view.setTabs(prop)
+            }
+        }
     }
-
-    View(AdaptiveNavigationView::class) {
-
-      Events("onPressEvent")
-
-      Prop("tabs") { view: AdaptiveNavigationView, prop: ArrayList<Tabs> ->
-        view.setTabs(prop)
-      }
-    }
-  }
 }

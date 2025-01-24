@@ -17,6 +17,9 @@ export default function AdaptiveNavigationView({
   navigation,
   ...props
 }: Readonly<AdaptiveNavigationViewProps>) {
+  const [viewDimensions, setViewDimensions] = React.useState<
+    { width: number; height: number } | undefined
+  >();
   const routes = React.useMemo(() => {
     return state.routes;
   }, [state.routes]);
@@ -51,7 +54,7 @@ export default function AdaptiveNavigationView({
       onPressEvent={(event) => {
         const index = event.nativeEvent.tabIndex;
         const route = state.routes[index];
-
+        console.log("🚀 ~ index:", index);
         if (!route) {
           return;
         }
@@ -72,6 +75,9 @@ export default function AdaptiveNavigationView({
           });
         }
       }}
+      onResize={({ nativeEvent }) => {
+        setViewDimensions(nativeEvent);
+      }}
     >
       {routes.map((route) => {
         const isFocused = route.key === focusedScreenKey;
@@ -82,6 +88,7 @@ export default function AdaptiveNavigationView({
             pointerEvents={isFocused ? "auto" : "none"}
             style={[
               StyleSheet.absoluteFill,
+              viewDimensions,
               { display: isFocused ? "flex" : "none" },
             ]}
           >

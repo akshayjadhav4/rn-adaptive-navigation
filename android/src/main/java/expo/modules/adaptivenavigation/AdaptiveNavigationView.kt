@@ -3,6 +3,7 @@ package expo.modules.adaptivenavigation
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -25,6 +26,8 @@ import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.views.ExpoView
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.view.children
+import androidx.core.view.forEachIndexed
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.viewevent.EventDispatcher
@@ -50,6 +53,11 @@ enum class NavigationType(val value: String) : Enumerable {
     PERMANENT_NAVIGATION_DRAWER("permanent_navigation_drawer")
 }
 
+fun convertPixelsToDp(px: Int, context: Context): Float {
+    val density = context.resources.displayMetrics.density
+    return px / density
+}
+
 @SuppressLint("ViewConstructor")
 class AdaptiveNavigationView(context: Context, appContext: AppContext) :
     ExpoView(context, appContext) {
@@ -58,6 +66,7 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
     private var selectedIndex = 0
 
     private val onPressEvent by EventDispatcher()
+    private val onResize by EventDispatcher()
 
     private val frameLayout = FrameLayout(context).apply {
         isSaveEnabled = false // Prevent state preservation during configuration changes.
@@ -67,7 +76,7 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
             AdaptiveNavigationSuite(
                 tabs = tabs,
                 onTabSelected = { index ->
-                    onPressEvent(mapOf("tabIndex" to index))
+                    onPressEvent.invoke(mapOf("tabIndex" to index))
                 }
             )
         }
@@ -75,17 +84,28 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
 
     init {
         addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        frameLayout.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            val width = convertPixelsToDp(right - left, context) // rightEdge - leftEdge
+            val height = convertPixelsToDp(bottom - top, context) // bottomEdge - topEdge
+            onResize(
+                mapOf(
+                    "width" to width,
+                    "height" to height
+                )
+            )
+        }
     }
 
-    override fun addView(child: View, index: Int) {
+    override fun addView(child: View, index: Int, params: ViewGroup.LayoutParams?) {
         when (child) {
-            composeView, frameLayout -> super.addView(child, index)
+            composeView, frameLayout -> super.addView(child, index, params)
             else -> {
                 val sceneContainer = createSceneContainer(index)
+                child.isEnabled = false
                 // Add the child view to the scene container
-                sceneContainer.addView(child)
+                sceneContainer.addView(child, params)
                 // Add the scene container to the frameLayout
-                frameLayout.addView(sceneContainer)
+                frameLayout.addView(sceneContainer, index)
             }
         }
     }
@@ -96,8 +116,8 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-            visibility = if (index == 0) VISIBLE else INVISIBLE
-            isEnabled = index == 0
+            visibility = if (index == selectedIndex) VISIBLE else INVISIBLE
+            isEnabled = index == selectedIndex
         }
     }
 
@@ -125,7 +145,7 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
                         label = { Text(tab.label) },
                     )
                 }
-            }
+            },
         ) {
             FrameLayoutContainer()
         }
@@ -151,10 +171,11 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
     }
 
     private fun updateSceneVisibility(selectedIndex: Int) {
-        for (i in 0 until frameLayout.childCount) {
-            val sceneContainer = frameLayout.getChildAt(i)
-            sceneContainer.visibility = if (i == selectedIndex) View.VISIBLE else View.INVISIBLE
-            sceneContainer.isEnabled = i == selectedIndex
+        frameLayout.forEachIndexed { index, view ->
+            check(view is ViewGroup) { }
+            view.visibility = if (index == selectedIndex) View.VISIBLE else View.INVISIBLE
+            view.isEnabled = index == selectedIndex
+            view.children.first().isEnabled = index == selectedIndex
         }
     }
 
