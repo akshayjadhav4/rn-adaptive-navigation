@@ -54,7 +54,6 @@ export default function AdaptiveNavigationView({
       onPressEvent={(event) => {
         const index = event.nativeEvent.tabIndex;
         const route = state.routes[index];
-        console.log("🚀 ~ index:", index);
         if (!route) {
           return;
         }
