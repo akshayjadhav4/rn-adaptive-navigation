@@ -18,6 +18,9 @@ import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.Report
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +70,7 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
 
     private val onPressEvent by EventDispatcher()
     private val onResize by EventDispatcher()
+    var navigationType = NavigationSuiteType.NavigationBar
 
     private val frameLayout = FrameLayout(context).apply {
         isSaveEnabled = false // Prevent state preservation during configuration changes.
@@ -90,7 +94,8 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
             onResize(
                 mapOf(
                     "width" to width,
-                    "height" to height
+                    "height" to height,
+                    "navigationType" to getNavigationType()
                 )
             )
         }
@@ -147,6 +152,9 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
                 }
             },
         ) {
+            val navSuiteType =
+                NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+            navigationType = navSuiteType
             FrameLayoutContainer()
         }
     }
@@ -179,6 +187,16 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
         }
     }
 
+    fun getNavigationType(): String {
+        val navTypeString = when (navigationType) {
+            NavigationSuiteType.NavigationBar -> NavigationType.BOTTOM_NAVIGATION.value
+            NavigationSuiteType.NavigationRail -> NavigationType.NAVIGATION_RAIL.value
+            NavigationSuiteType.NavigationDrawer -> NavigationType.PERMANENT_NAVIGATION_DRAWER.value
+            else -> NavigationType.BOTTOM_NAVIGATION.value
+        }
+        return navTypeString
+    }
+
 }
 
 /**
@@ -192,11 +210,4 @@ private fun getImageVectorByName(iconName: String?): ImageVector? {
         "Report" -> Icons.Default.Report
         else -> null
     }
-}
-
-
-fun getNavigationType(): NavigationType {
-    // Default value for navigation type
-    val navigationType: NavigationType = NavigationType.BOTTOM_NAVIGATION
-    return navigationType
 }
