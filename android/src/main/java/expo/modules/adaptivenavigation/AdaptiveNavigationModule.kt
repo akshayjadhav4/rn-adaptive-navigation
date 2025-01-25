@@ -17,7 +17,7 @@ class AdaptiveNavigationModule : Module() {
             Events("onPressEvent", "onResize")
 
 
-            Prop("tabs") { view: AdaptiveNavigationView, prop: ArrayList<Tabs> ->
+            Prop("tabs") { view: AdaptiveNavigationView, prop: ArrayList<TabItem> ->
                 view.setTabs(prop)
             }
         }

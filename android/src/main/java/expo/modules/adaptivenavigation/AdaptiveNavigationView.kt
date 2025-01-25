@@ -21,52 +21,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.views.ExpoView
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.view.children
 import androidx.core.view.forEachIndexed
-import expo.modules.kotlin.records.Field
-import expo.modules.kotlin.records.Record
 import expo.modules.kotlin.viewevent.EventDispatcher
-import expo.modules.kotlin.types.Enumerable
 
-class Tabs : Record {
-    @Field
-    val key: String = ""
-
-    @Field
-    val label: String = ""
-
-    @Field
-    val icon: String? = null
-
-    @Field
-    val isSelected: Boolean = false
-}
-
-enum class NavigationType(val value: String) : Enumerable {
-    BOTTOM_NAVIGATION("bottom_navigation"),
-    NAVIGATION_RAIL("navigation_rail"),
-    PERMANENT_NAVIGATION_DRAWER("permanent_navigation_drawer")
-}
-
-fun convertPixelsToDp(px: Int, context: Context): Float {
-    val density = context.resources.displayMetrics.density
+fun Context.convertPixelsToDp(px: Int): Float {
+    val density = resources.displayMetrics.density
     return px / density
 }
 
 @SuppressLint("ViewConstructor")
 class AdaptiveNavigationView(context: Context, appContext: AppContext) :
     ExpoView(context, appContext) {
-
-    var tabs: MutableList<Tabs> = mutableListOf()
-    private var selectedIndex = 0
+    private  var adaptiveNavigationViewModel = AdaptiveNavigationViewModel()
 
     private val onPressEvent by EventDispatcher()
     private val onResize by EventDispatcher()
@@ -77,25 +50,20 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
     }
     private val composeView = ComposeView(context).also {
         it.setContent {
-            AdaptiveNavigationSuite(
-                tabs = tabs,
-                onTabSelected = { index ->
-                    onPressEvent.invoke(mapOf("tabIndex" to index))
-                }
-            )
+            AdaptiveNavigationSuite()
         }
     }
 
     init {
         addView(composeView, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         frameLayout.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            val width = convertPixelsToDp(right - left, context) // rightEdge - leftEdge
-            val height = convertPixelsToDp(bottom - top, context) // bottomEdge - topEdge
+            val width = context.convertPixelsToDp(right - left) // rightEdge - leftEdge
+            val height = context.convertPixelsToDp(bottom - top) // bottomEdge - topEdge
             onResize(
                 mapOf(
                     "width" to width,
                     "height" to height,
-                    "navigationType" to getNavigationType()
+                    "navigationType" to navigationType.toString()
                 )
             )
         }
@@ -121,25 +89,26 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             )
-            visibility = if (index == selectedIndex) VISIBLE else INVISIBLE
-            isEnabled = index == selectedIndex
+            visibility =
+                if (index == adaptiveNavigationViewModel.selectedIndex.value) VISIBLE else INVISIBLE
+            isEnabled = index == adaptiveNavigationViewModel.selectedIndex.value
         }
     }
 
     @Composable
-    fun AdaptiveNavigationSuite(
-        tabs: List<Tabs>,
-        onTabSelected: (Int) -> Unit
-    ) {
-        var activeTab by remember { mutableIntStateOf(selectedIndex) }
+    fun AdaptiveNavigationSuite() {
+        val tabs by adaptiveNavigationViewModel.tabs.collectAsState()
+        val navSuiteType =
+            NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
+        navigationType = navSuiteType
         NavigationSuiteScaffold(
             navigationSuiteItems = {
                 tabs.forEachIndexed { index, tab ->
                     item(
-                        selected = index == activeTab,
+                        selected = tab.isSelected,
                         onClick = {
-                            activeTab = index
-                            onTabSelected(index)
+                            adaptiveNavigationViewModel.selectTab(index)
+                            onPressEvent(mapOf("tabIndex" to index))
                         },
                         icon = {
                             val icon = getImageVectorByName(tab.icon)
@@ -152,9 +121,6 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
                 }
             },
         ) {
-            val navSuiteType =
-                NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
-            navigationType = navSuiteType
             FrameLayoutContainer()
         }
     }
@@ -170,12 +136,9 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
         }
     }
 
-    fun setTabs(tabs: ArrayList<Tabs>) {
-        if (this.tabs.size != tabs.size) {
-            this.tabs = tabs
-        }
-        selectedIndex = tabs.indexOfFirst { it.isSelected }
-        updateSceneVisibility(selectedIndex)
+    fun setTabs(tabs: ArrayList<TabItem>) {
+        adaptiveNavigationViewModel.setTabs(tabs)
+        updateSceneVisibility(adaptiveNavigationViewModel.selectedIndex.value)
     }
 
     private fun updateSceneVisibility(selectedIndex: Int) {
@@ -185,16 +148,6 @@ class AdaptiveNavigationView(context: Context, appContext: AppContext) :
             view.isEnabled = index == selectedIndex
             view.children.first().isEnabled = index == selectedIndex
         }
-    }
-
-    fun getNavigationType(): String {
-        val navTypeString = when (navigationType) {
-            NavigationSuiteType.NavigationBar -> NavigationType.BOTTOM_NAVIGATION.value
-            NavigationSuiteType.NavigationRail -> NavigationType.NAVIGATION_RAIL.value
-            NavigationSuiteType.NavigationDrawer -> NavigationType.PERMANENT_NAVIGATION_DRAWER.value
-            else -> NavigationType.BOTTOM_NAVIGATION.value
-        }
-        return navTypeString
     }
 
 }
