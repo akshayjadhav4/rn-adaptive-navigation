@@ -1,8 +1,12 @@
 import { useNavigation } from "@react-navigation/native";
+import { useAdaptiveNavigationDimensions } from "adaptive-navigation";
 import React from "react";
 import { View, Text, Image, StyleSheet, Pressable } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
 import type { RootStackNavigationProp } from "../navigation";
+import { RootState } from "../store";
+import { setCurrentEmail } from "../store/mailSlice";
 import { Email } from "../types";
 
 interface EmailCardProps {
@@ -10,15 +14,28 @@ interface EmailCardProps {
 }
 
 export function EmailCard({ email }: Readonly<EmailCardProps>) {
+  const navigationDimensions = useAdaptiveNavigationDimensions();
   const navigation = useNavigation<RootStackNavigationProp>();
+  const isCardActive =
+    useSelector((state: RootState) => state.mail.currentEmail?.id) ===
+      email.id && navigationDimensions?.navigationType === "NavigationRail";
+  const dispatch = useDispatch();
 
   const handlePress = () => {
-    navigation.navigate("MailDetail", { email });
+    dispatch(setCurrentEmail(email));
+    if (navigationDimensions?.navigationType === "NavigationBar") {
+      navigation.navigate("MailDetail", { email });
+    }
   };
 
   return (
     <Pressable onPress={handlePress}>
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          isCardActive ? { backgroundColor: "#EDE7F6" } : null,
+        ]}
+      >
         <Image
           source={{ uri: email.sender.avatarResourceId }}
           style={styles.avatar}

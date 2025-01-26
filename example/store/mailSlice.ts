@@ -5,12 +5,14 @@ import { dummyEmails } from "../utils/dummyData";
 
 interface MailState {
   emails: Email[];
+  currentEmail: Email | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: MailState = {
   emails: dummyEmails,
+  currentEmail: null,
   loading: false,
   error: null,
 };
@@ -45,6 +47,9 @@ const mailSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    setCurrentEmail: (state, action: PayloadAction<Email | null>) => {
+      state.currentEmail = action.payload;
+    },
   },
 });
 
@@ -55,6 +60,7 @@ export const {
   moveToMailbox,
   setLoading,
   setError,
+  setCurrentEmail,
 } = mailSlice.actions;
 
 export default mailSlice.reducer;

@@ -19,7 +19,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 type MailDetailScreenProps = StackScreenProps<RootStackParamList, "MailDetail">;
 
 const MailDetailScreenWrapper: React.FC<MailDetailScreenProps> = (props) => {
-  return <EmailDetailScreen {...props} />;
+  return <EmailDetailScreen />;
 };
 
 const SentScreen: React.FC = () => {

@@ -1,24 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { useSelector } from "react-redux";
 
-import { Email } from "../types";
+import { RootState } from "../store";
 
 interface EmailDetailScreenProps {
-  route: {
-    params: {
-      email: Email;
-    };
-  };
   isSplitView?: boolean;
 }
 
 const EmailDetailScreen: React.FC<EmailDetailScreenProps> = ({
-  route,
   isSplitView = false,
 }) => {
-  const { email } = route.params;
+  const email = useSelector((state: RootState) => state.mail.currentEmail);
 
+  if (!email) {
+    return <Text>No email selected</Text>;
+  }
   return (
     <View style={[styles.container, isSplitView ? { padding: 0 } : null]}>
       {!isSplitView ? (
