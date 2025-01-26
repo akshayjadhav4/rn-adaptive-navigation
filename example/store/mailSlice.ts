@@ -1,7 +1,8 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { Email, MailboxType } from "../types";
 import { dummyEmails } from "../utils/dummyData";
+import { RootState } from ".";
 
 interface MailState {
   emails: Email[];
@@ -62,5 +63,19 @@ export const {
   setError,
   setCurrentEmail,
 } = mailSlice.actions;
+
+export const selectCurrentEmailId = createSelector(
+  (state: RootState) => state.mail.currentEmail,
+  (currentEmail) => currentEmail?.id ?? null
+);
+
+export const selectEmailsByMailbox = createSelector(
+  [
+    (state: RootState) => state.mail.emails,
+    (_: RootState, mailboxType: MailboxType) => mailboxType,
+  ],
+  (emails, mailboxType) =>
+    emails.filter((email) => email.mailbox === mailboxType) // Memoized filtered emails
+);
 
 export default mailSlice.reducer;

@@ -9,7 +9,7 @@ import { useAppSelector } from "../hooks/useStore";
 import type { RootState } from "../store";
 import { Email, MailboxType } from "../types";
 import EmailDetailScreen from "./EmailDetailScreen";
-import { setCurrentEmail } from "../store/mailSlice";
+import { selectEmailsByMailbox, setCurrentEmail } from "../store/mailSlice";
 
 interface MailScreenProps {
   mailboxType: MailboxType;
@@ -19,8 +19,8 @@ const MailScreen: React.FC<MailScreenProps> = ({ mailboxType }) => {
   const navigationDimensions = useAdaptiveNavigationDimensions();
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const emails = useAppSelector((state: RootState) =>
-    state.mail.emails.filter((email) => email.mailbox === mailboxType)
+  const emails = useAppSelector((state) =>
+    selectEmailsByMailbox(state, mailboxType)
   );
 
   useEffect(() => {

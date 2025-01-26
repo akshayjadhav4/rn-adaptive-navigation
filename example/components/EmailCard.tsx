@@ -5,8 +5,7 @@ import { View, Text, Image, StyleSheet, Pressable } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
 import type { RootStackNavigationProp } from "../navigation";
-import { RootState } from "../store";
-import { setCurrentEmail } from "../store/mailSlice";
+import { selectCurrentEmailId, setCurrentEmail } from "../store/mailSlice";
 import { Email } from "../types";
 
 interface EmailCardProps {
@@ -17,8 +16,8 @@ export function EmailCard({ email }: Readonly<EmailCardProps>) {
   const navigationDimensions = useAdaptiveNavigationDimensions();
   const navigation = useNavigation<RootStackNavigationProp>();
   const isCardActive =
-    useSelector((state: RootState) => state.mail.currentEmail?.id) ===
-      email.id && navigationDimensions?.navigationType === "NavigationRail";
+    useSelector(selectCurrentEmailId) === email.id &&
+    navigationDimensions?.navigationType === "NavigationRail";
   const dispatch = useDispatch();
 
   const handlePress = () => {
