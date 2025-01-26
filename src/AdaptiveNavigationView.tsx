@@ -38,8 +38,12 @@ export default function AdaptiveNavigationView({
   const routes = React.useMemo(() => {
     return state.routes;
   }, [state.routes]);
-  const focusedScreenKey = routes[state.index].key;
 
+  const focusedScreenKey = routes[state.index].key;
+  const [visited, setVisited] = React.useState<string[]>([focusedScreenKey]);
+  if (!visited.includes(focusedScreenKey)) {
+    setVisited((visited) => [...visited, focusedScreenKey]);
+  }
   const tabs = React.useMemo(
     () =>
       routes.map((route) => {
@@ -96,6 +100,20 @@ export default function AdaptiveNavigationView({
       >
         {routes.map((route) => {
           const isFocused = route.key === focusedScreenKey;
+
+          if (!visited.includes(route.key)) {
+            return (
+              <View
+                key={route.key}
+                collapsable={false}
+                style={[
+                  StyleSheet.absoluteFill,
+                  viewDimensions,
+                  { display: isFocused ? "flex" : "none" },
+                ]}
+              />
+            );
+          }
           return (
             <View
               key={route.key}

@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { useAdaptiveNavigationDimensions } from "adaptive-navigation";
 import React, { useEffect } from "react";
 import { View, FlatList, StyleSheet } from "react-native";
@@ -16,14 +17,19 @@ interface MailScreenProps {
 
 const MailScreen: React.FC<MailScreenProps> = ({ mailboxType }) => {
   const navigationDimensions = useAdaptiveNavigationDimensions();
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const emails = useAppSelector((state: RootState) =>
     state.mail.emails.filter((email) => email.mailbox === mailboxType)
   );
 
   useEffect(() => {
-    dispatch(setCurrentEmail(emails[0]));
-  }, []);
+    const unsubscribe = navigation.addListener("focus", () => {
+      dispatch(setCurrentEmail(emails[0]));
+    });
+    return unsubscribe;
+  }, [navigation, mailboxType]);
+
   if (navigationDimensions?.navigationType === "NavigationRail") {
     return (
       <View style={styles.splitViewContainer}>
