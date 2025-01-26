@@ -105,6 +105,7 @@ export type NativeAdaptiveNavigationViewProps = ViewProps & {
 };
 
 export type NavigationType =
-  | "bottom_navigation"
-  | "navigation_rail"
-  | "permanent_navigation_drawer";
+  | "NavigationBar"
+  | "NavigationRail"
+  | "NavigationDrawer"
+  | "None";
