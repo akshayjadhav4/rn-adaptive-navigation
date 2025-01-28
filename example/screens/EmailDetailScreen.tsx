@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useSelector } from "react-redux";
@@ -12,6 +13,7 @@ interface EmailDetailScreenProps {
 const EmailDetailScreen: React.FC<EmailDetailScreenProps> = ({
   isSplitView = false,
 }) => {
+  const navigation = useNavigation();
   const email = useSelector((state: RootState) => state.mail.currentEmail);
 
   if (!email) {
@@ -21,7 +23,10 @@ const EmailDetailScreen: React.FC<EmailDetailScreenProps> = ({
     <View style={[styles.container, isSplitView ? { padding: 0 } : null]}>
       {!isSplitView ? (
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={navigation.goBack}
+          >
             <Ionicons name="arrow-back" size={24} color="#1D192B" />
           </TouchableOpacity>
           <Text style={styles.subject}>{email.subject}</Text>
